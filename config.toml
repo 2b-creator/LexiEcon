@@ -1,0 +1,16 @@
+# database set up
+[database]
+host = "127.0.0.1"
+port = "5432"
+name = "lexi_econ_db"
+user = "lexi_econ"
+password = "your_password"
+
+# root user config and init
+[admin]
+username = "root"
+password = "root_password"
+email = "root@example.com"
+
+[book]
+name = ["CET4luan_1"]
