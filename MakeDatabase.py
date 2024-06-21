@@ -88,6 +88,8 @@ def set_up_table():
         word_id INT NOT NULL,
         review_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         review_result VARCHAR(50) NOT NULL,
+        spell_correct_count INT NOT NULL DEFAULT 0,
+        spell_wrong_count INT NOT NULL DEFAULT 0,
         FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
         FOREIGN KEY (word_id) REFERENCES words(word_id) ON DELETE CASCADE
     );

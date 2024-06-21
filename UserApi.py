@@ -127,7 +127,7 @@ def query_tasks():
         for i in all_id:
             dic = {"task_id": i[0], "task_name": i[1]}
             ls.append(dic)
-        return jsonify({"data": ls}), 200
+        return jsonify({"data": ls, "code": 200}), 200
 
 
 @app.route('/api/users/task/check', methods=['GET'])
@@ -140,4 +140,62 @@ def check_tasks(users):
     for i in all_tasks:
         dic = {"task_id": i[0], "class_id": i[1], "status": i[2]}
         ls.append(dic)
-    return jsonify({"data": ls}), 200
+    return jsonify({"data": ls, "code": 200}), 200
+
+
+@app.route('/api/users/class/info', methods=['GET'])
+@token_required_users
+def class_users(users):
+    args = set(request.args.items())
+    cursor.execute("SELECT class_id, user_id, role FROM class_users WHERE user_id = %s", (users[0],))
+    res = cursor.fetchall()
+    ls = []
+    for i in res:
+        dic = {"class_id": i[0], "user_id": i[1], "role": i[2]}
+        set_dic = set(dic.items())
+        if args is not None:
+            if args.issubset(set_dic):
+                ls.append(dic)
+        else:
+            ls.append(dic)
+    all_dic = {"data": ls, "code": 200}
+    return jsonify(all_dic), 200
+
+
+@app.route('/api/users/words/submit', methods=['POST'])
+@token_required_users
+def task_submit_condition(users):
+    user_id = users[0]
+    data = request.json
+    word_id = int(data["word_id"])
+    test_cate = data["review_category"]
+    situation = data["situation"]
+    if test_cate == "spell":
+        if situation == "true":
+            cursor.execute("SELECT spell_correct_count FROM user_review_records WHERE user_id = %s AND word_id = %s",
+                           (user_id, word_id))
+            if cursor.fetchone() is None:
+                cursor.execute("INSERT INTO user_review_records (user_id, word_id) VALUES (%s, %s)", (user_id, word_id))
+            cursor.execute("SELECT spell_correct_count FROM user_review_records WHERE user_id = %s AND word_id = %s",
+                           (user_id, word_id))
+            count = int(cursor.fetchone()[0])
+            count += 1
+            cursor.execute(
+                "UPDATE user_review_records SET spell_correct_count = %s WHERE user_id = %s AND word_id = %s",
+                (count, user_id, word_id))
+        elif situation == "false":
+            cursor.execute("SELECT spell_wrong_count FROM user_review_records WHERE user_id = %s AND word_id = %s",
+                           (user_id, word_id))
+            count = int(cursor.fetchone()[0])
+            count += 1
+            cursor.execute(
+                "UPDATE user_review_records SET spell_wrong_count = %s WHERE user_id = %s AND word_id = %s",
+                (count, user_id, word_id))
+        else:
+            return jsonify({"code": 405, "message": "Bad situation, must be 'false' or 'true'! "}), 405
+
+
+@app.route('/api/users/task/finish', methods=['POST'])
+@token_required_users
+def finish_task(users):
+    pass

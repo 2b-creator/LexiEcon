@@ -39,7 +39,7 @@ def stu_test():
 
     data_json = json.dumps(data)
 
-    resp = requests.get(url="http://127.0.0.1:5000/api/users/task/check", headers=headers)
+    resp = requests.get(url="http://127.0.0.1:5000/api/users/class/info?class_id=1", headers=headers)
     print(resp.json())
 
 stu_test()
