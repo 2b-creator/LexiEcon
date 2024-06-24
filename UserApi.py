@@ -198,4 +198,10 @@ def task_submit_condition(users):
 @app.route('/api/users/task/finish', methods=['POST'])
 @token_required_users
 def finish_task(users):
-    pass
+    data = request.json
+    user_id = users[0]
+    task_id = data["task_id"]
+    cursor.execute("UPDATE user_tasks SET status = %s WHERE user_id = %s AND task_id = %s",
+                   ("已完成", user_id, task_id))
+    dic = {"code": 200, "message": f"Task {task_id} is finished."}
+    return jsonify(dic), 200
