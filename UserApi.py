@@ -143,6 +143,27 @@ def check_tasks(users):
     return jsonify({"data": ls, "code": 200}), 200
 
 
+@app.route('/api/users/task/get_words', methods=['GET'])
+@token_required_users
+def get_tasks_words(users):
+    task_id = request.args.get("task_id")
+    if task_id is not None:
+        cursor.execute("SELECT task_word_id, task_id, word_id FROM public.task_words WHERE task_id = %s", (task_id,))
+        all_res = cursor.fetchall()
+        ls = []
+        for i in all_res:
+            ls.append(i)
+        return jsonify({"data": ls, "code": 200}), 200
+    else:
+        cursor.execute("SELECT task_id, word_id FROM public.task_words", (task_id,))
+        all_res = cursor.fetchall()
+        ls = []
+        for i in all_res:
+            dic = {"task_id": i[0], "word_id": i[1]}
+            ls.append(dic)
+        return jsonify({"data": ls, "code": 200}), 200
+
+
 @app.route('/api/users/class/info', methods=['GET'])
 @token_required_users
 def class_users(users):
@@ -160,6 +181,18 @@ def class_users(users):
             ls.append(dic)
     all_dic = {"data": ls, "code": 200}
     return jsonify(all_dic), 200
+
+
+@app.route('/api/users/task/finish', methods=['POST'])
+@token_required_users
+def finish_task(users):
+    data = request.json
+    user_id = users[0]
+    task_id = data["task_id"]
+    cursor.execute("UPDATE user_tasks SET status = %s WHERE user_id = %s AND task_id = %s",
+                   ("已完成", user_id, task_id))
+    dic = {"code": 200, "message": f"Task {task_id} is finished."}
+    return jsonify(dic), 200
 
 
 @app.route('/api/users/words/submit', methods=['POST'])
@@ -195,13 +228,22 @@ def task_submit_condition(users):
             return jsonify({"code": 405, "message": "Bad situation, must be 'false' or 'true'! "}), 405
 
 
-@app.route('/api/users/task/finish', methods=['POST'])
+@app.route('/api/users/words/query', methods=['GET'])
 @token_required_users
-def finish_task(users):
-    data = request.json
-    user_id = users[0]
-    task_id = data["task_id"]
-    cursor.execute("UPDATE user_tasks SET status = %s WHERE user_id = %s AND task_id = %s",
-                   ("已完成", user_id, task_id))
-    dic = {"code": 200, "message": f"Task {task_id} is finished."}
-    return jsonify(dic), 200
+def query_words_with_id(users):
+    ls = []
+    words_id = request.args.get("words_id")
+    if words_id is not None:
+        cursor.execute("SELECT json_all FROM public.words WHERE word_id = %s;", (words_id,))
+        all_res = cursor.fetchall()
+
+        for i in all_res:
+            dic = i[0]
+            ls.append(dic)
+    else:
+        cursor.execute("SELECT json_all FROM public.words")
+        all_res = cursor.fetchall()
+        for i in all_res:
+            dic = i[0]
+            ls.append(dic)
+    return jsonify({"data": ls}), 200

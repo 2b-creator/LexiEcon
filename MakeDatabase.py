@@ -51,6 +51,7 @@ def set_up_table():
     CREATE TABLE tasks (
         task_id SERIAL PRIMARY KEY,
         task_name VARCHAR(100) NOT NULL,
+        task_description VARCHAR(100),
         created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
     """)
