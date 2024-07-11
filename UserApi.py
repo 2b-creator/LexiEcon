@@ -113,19 +113,20 @@ def release_task(users):
 
 
 @app.route('/api/users/task/query', methods=['GET'])
-# @token_required_users
-def query_tasks():
+@token_required_users
+def query_tasks(users):
+    user_id = users[0]
     name = request.args.get("task_name")
     if name is not None:
-        cursor.execute("SELECT task_id FROM tasks WHERE task_name = %s", (name,))
+        cursor.execute("SELECT t.task_id FROM tasks t JOIN user_tasks ut ON t.task_id = ut.task_id WHERE task_name = %s AND ut.user_id = %s", (name,user_id))
         task_id = cursor.fetchone()[0]
         return jsonify({"task_id": task_id})
     else:
-        cursor.execute("SELECT task_id,task_name FROM tasks;")
+        cursor.execute("SELECT t.task_id, t.task_name, ut.status FROM tasks t JOIN user_tasks ut ON t.task_id = ut.task_id WHERE ut.user_id = %s;",(user_id,))
         all_id = cursor.fetchall()
         ls = []
         for i in all_id:
-            dic = {"task_id": i[0], "task_name": i[1]}
+            dic = {"task_id": i[0], "task_name": i[1], "status": i[2]}
             ls.append(dic)
         return jsonify({"data": ls, "code": 200}), 200
 
@@ -200,6 +201,7 @@ def finish_task(users):
     cursor.execute("UPDATE user_tasks SET status = %s WHERE user_id = %s AND task_id = %s",
                    ("已完成", user_id, task_id))
     dic = {"code": 200, "message": f"Task {task_id} is finished."}
+    database.commit()
     return jsonify(dic), 200
 
 

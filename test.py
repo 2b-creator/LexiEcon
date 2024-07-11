@@ -11,17 +11,18 @@ def teacher_test():
         "access-token": uid,
         "Content-Type": "application/json"
     }
-    data = {"username": "lexi", "password": "CY9rzUYh03PK3k6DJie09g==", "stu_id": 19198100, "email": "test@test.com"}
+    data = {"username": "lexier", "password": "liAS0JuBcNkS8GafbX2dBw==", "stu_id": 191981001, "email": "test111@test.com"}
 
     data_2 = {"class_id": 1, "user_id": 1, "role": "monitor"}
-    data_json = json.dumps(data_2)
+    data_json = json.dumps(data)
 
-    resp = requests.post(url="http://127.0.0.1:5000/api/admin/change_role", headers=headers, data=data_json)
+    resp = requests.post(url="http://127.0.0.1:5000/api/admin/force_reg", headers=headers, data=data_json)
     print(resp.json())
 
 
 def stu_test():
     uid = "806e5a8d-23f9-4f31-96bc-dacf89cbfe79"
+    # uid = "f607ea89-5371-4b4b-aecf-423933cd0bde"
 
     headers = {
         "access-token": uid,
@@ -29,12 +30,13 @@ def stu_test():
     }
 
     data = {
-        "task_id": 1
+        "task_id": 1,
+        "class_id":1
     }
     data_2 = {"invite_code": "79187fd2"}
     data_json = json.dumps(data)
 
-    resp = requests.post(url="http://127.0.0.1:5000/api/users/task/finish", headers=headers, data=data_json)
+    resp = requests.post(url="http://127.0.0.1:5000/api/users/task/release", headers=headers, data=data_json)
     print(resp.json())
 
 
