@@ -11,6 +11,15 @@ cur = database.cursor()
 
 def set_up_table():
     global cur
+    # class
+    cur.execute("""
+        CREATE TABLE classes (
+            class_id SERIAL PRIMARY KEY,
+            class_name VARCHAR(100) NOT NULL,
+            created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """)
+
     # user table
     cur.execute("""
     CREATE TABLE users (
@@ -31,6 +40,18 @@ def set_up_table():
     );
     """)
 
+    # class - users
+    cur.execute("""
+            CREATE TABLE class_users (
+                class_user_id SERIAL PRIMARY KEY,
+                class_id INT NOT NULL,
+                user_id INT NOT NULL,
+                role VARCHAR(50) DEFAULT 'member',
+                FOREIGN KEY (class_id) REFERENCES classes(class_id) ON DELETE CASCADE,
+                FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+            );
+            """)
+
     # words table
     cur.execute("""
     CREATE TABLE words (
@@ -40,6 +61,7 @@ def set_up_table():
         us_phone VARCHAR(100) NOT NULL, 
         trans TEXT NOT NULL,
         cate_id INT NOT NULL,
+        sentences TEXT NOT NULL,
         json_all JSON NOT NULL,
         added_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (cate_id) REFERENCES category(cate_id) ON DELETE CASCADE
@@ -73,12 +95,12 @@ def set_up_table():
         user_task_id SERIAL PRIMARY KEY,
         user_id INT NOT NULL,
         task_id INT NOT NULL,
-        class_id INT NOT NULL
+        class_id INT NOT NULL,
         status VARCHAR(50) NOT NULL DEFAULT '未开始',
         completion_date TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
         FOREIGN KEY (task_id) REFERENCES tasks(task_id) ON DELETE CASCADE,
-        FOREIGN KEY (class_id) REFERENCES class(class_id) ON DELETE CASCADE
+        FOREIGN KEY (class_id) REFERENCES classes(class_id) ON DELETE CASCADE
     );""")
 
     # user - review
@@ -106,27 +128,6 @@ def set_up_table():
             access_token VARCHAR(200) NOT NULL UNIQUE
         );
         """)
-
-    # class
-    cur.execute("""
-    CREATE TABLE classes (
-        class_id SERIAL PRIMARY KEY,
-        class_name VARCHAR(100) NOT NULL,
-        created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-    """)
-
-    # class - users
-    cur.execute("""
-    CREATE TABLE class_users (
-        class_user_id SERIAL PRIMARY KEY,
-        class_id INT NOT NULL,
-        user_id INT NOT NULL,
-        role VARCHAR(50) DEFAULT 'member',
-        FOREIGN KEY (class_id) REFERENCES classes(class_id) ON DELETE CASCADE,
-        FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
-    );
-    """)
 
     # token
     cur.execute("""
@@ -169,9 +170,14 @@ def words_to_sql(filename: str):
             word = read_lines_json["headWord"]
             uk_phone = read_lines_json["content"]["word"]["content"]["ukphone"]
             us_phone = read_lines_json["content"]["word"]["content"].get("usphone", "None")
+            sentences = read_lines_json["content"]["word"]["content"].get("sentence", "None")
+            if sentences != "None":
+                sentences = sentences.get("sentences", "None")
             trans = str(read_lines_json["content"]["word"]["content"]["trans"])
-            cur.execute(f"INSERT INTO words (word, uk_phone, us_phone, trans, cate_id, json_all) VALUES (%s, %s, "
-                        f"%s, %s, %s, %s)", (word, uk_phone, us_phone, trans, cate_id, json.dumps(read_lines_json)))
+            cur.execute(
+                f"INSERT INTO words (word, uk_phone, us_phone, trans, cate_id, sentences, json_all) VALUES (%s, %s, "
+                f"%s, %s, %s, %s, %s)",
+                (word, uk_phone, us_phone, trans, cate_id, str(sentences), json.dumps(read_lines_json)))
 
 
 if __name__ == "__main__":

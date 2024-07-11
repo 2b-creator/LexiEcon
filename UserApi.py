@@ -109,7 +109,7 @@ def release_task(users):
             cursor.execute("INSERT INTO user_tasks (user_id, task_id, class_id, status) VALUES (%s, %s, %s, %s)",
                            (i, task_id, class_id, "未开始"))
     database.commit()
-    return jsonify({"code": 200, "message": f"Task {task_id} was successfully assigned to {class_id}"})
+    return jsonify({"code": 200, "message": f"Task {task_id} was successfully released to class {class_id}"})
 
 
 @app.route('/api/users/task/query', methods=['GET'])
@@ -133,8 +133,9 @@ def query_tasks():
 @app.route('/api/users/task/check', methods=['GET'])
 @token_required_users
 def check_tasks(users):
+    task_id = request.args.get("task_id")
     user_id = users[0]
-    cursor.execute("SELECT task_id, class_id, status FROM user_tasks WHERE user_id = %s", (user_id,))
+    cursor.execute("SELECT task_id, class_id, status FROM user_tasks WHERE user_id = %s AND task_id = %s", (user_id, task_id))
     all_tasks = cursor.fetchall()
     ls = []
     for i in all_tasks:
@@ -146,20 +147,27 @@ def check_tasks(users):
 @app.route('/api/users/task/get_words', methods=['GET'])
 @token_required_users
 def get_tasks_words(users):
+    user_id = users[0]
     task_id = request.args.get("task_id")
     if task_id is not None:
-        cursor.execute("SELECT task_word_id, task_id, word_id FROM public.task_words WHERE task_id = %s", (task_id,))
+        cursor.execute(
+            "SELECT t.task_id, t.word_id, w.word, w.trans, w.sentences, w.json_all, w.us_phone, w.uk_phone FROM "
+            "task_words t JOIN words w ON t.word_id = w.word_id WHERE task_id = %s",
+            (task_id,))
         all_res = cursor.fetchall()
         ls = []
         for i in all_res:
             ls.append(i)
         return jsonify({"data": ls, "code": 200}), 200
     else:
-        cursor.execute("SELECT task_id, word_id FROM public.task_words", (task_id,))
+        cursor.execute(
+            "SELECT t.task_id, t.word_id, w.word, w.trans, w.sentences, w.json_all, w.us_phone, w.uk_phone FROM "
+            "task_words t JOIN words w ON t.word_id = w.word_id")
         all_res = cursor.fetchall()
         ls = []
         for i in all_res:
-            dic = {"task_id": i[0], "word_id": i[1]}
+            dic = {"task_id": i[0], "word_id": i[1], "word_name": i[2], "trans": i[3], "sentence": i[4],
+                   "word_data": i[5], "us_phone": i[6], "uk_phone": i[7]}
             ls.append(dic)
         return jsonify({"data": ls, "code": 200}), 200
 

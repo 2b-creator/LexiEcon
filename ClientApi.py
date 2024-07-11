@@ -23,10 +23,10 @@ def login_admin():
     data = request.json
     username = data["username"]
     password = data["password"]
-    cursor.execute("SELECT password FROM admin WHERE username=%s", (username,))
+    cursor.execute("SELECT password FROM admins WHERE name=%s", (username,))
     remote_pwd = cursor.fetchone()[0]
     if password == remote_pwd:
-        cursor.execute("SELECT access_token FROM users WHERE username=%s", (username,))
+        cursor.execute("SELECT access_token FROM admins WHERE name=%s", (username,))
         token = cursor.fetchone()[0]
         return jsonify({"code": 200, "access_token": token, "message": "Login success"}), 200
     return jsonify({"code": 403, "message": "Sorry, Authentication failure, try again."}), 403
