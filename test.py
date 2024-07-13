@@ -11,9 +11,10 @@ def teacher_test():
         "access-token": uid,
         "Content-Type": "application/json"
     }
-    data = {"username": "lexier", "password": "liAS0JuBcNkS8GafbX2dBw==", "stu_id": 191981001, "email": "test111@test.com"}
+    data = {"username": "timothy", "password": "an7Q2m7EPGA8P1UyPODuGQ==", "stu_id": 2023243109,
+            "email": "114514@test.com"}
 
-    data_2 = {"class_id": 1, "user_id": 1, "role": "monitor"}
+    data_2 = {"user_id": 6, "class_id": 2, "role": "monitor"}
     data_json = json.dumps(data)
 
     resp = requests.post(url="http://127.0.0.1:5000/api/admin/force_reg", headers=headers, data=data_json)
@@ -21,8 +22,8 @@ def teacher_test():
 
 
 def stu_test():
+    uid = "d98f84e4-fa79-43f3-90bf-4c3623795ff7"
     uid = "806e5a8d-23f9-4f31-96bc-dacf89cbfe79"
-    # uid = "f607ea89-5371-4b4b-aecf-423933cd0bde"
 
     headers = {
         "access-token": uid,
@@ -30,10 +31,15 @@ def stu_test():
     }
 
     data = {
-        "task_id": 1,
-        "class_id":1
+        "task_id": 4,
+        "class_id": 1,
+        # "words":[{
+        #     "cate_id":1,
+        #     "start":58,
+        #     "end": 62
+        # }]
     }
-    data_2 = {"invite_code": "79187fd2"}
+    data_2 = {"invite_code": "e70bc28c"}
     data_json = json.dumps(data)
 
     resp = requests.post(url="http://127.0.0.1:5000/api/users/task/release", headers=headers, data=data_json)
@@ -62,4 +68,5 @@ def client_test():
     print(resp.json())
 
 
-stu_test()
+teacher_test()
+# stu_test()

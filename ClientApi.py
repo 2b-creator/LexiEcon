@@ -30,3 +30,14 @@ def login_admin():
         token = cursor.fetchone()[0]
         return jsonify({"code": 200, "access_token": token, "message": "Login success"}), 200
     return jsonify({"code": 403, "message": "Sorry, Authentication failure, try again."}), 403
+
+
+@app.route('/api/client/get_cate', methods=['GET'])
+def check_cate():
+    cursor.execute("SELECT cate_id, cate_name, cate_count FROM public.category")
+    getdata = cursor.fetchall()
+    ls = []
+    for i in getdata:
+        dic = {"cate_id": int(i[0]), "cate_name": i[1]}
+        ls.append(dic)
+    return jsonify({"data": ls, "code": 200}), 200

@@ -30,11 +30,15 @@ def join_class(users):
     post_invite_code = data["invite_code"]
     cursor.execute("SELECT class_id FROM class_invites WHERE invite_code=%s;", (post_invite_code,))
     class_id = cursor.fetchone()[0]
-    cursor.execute("INSERT INTO class_users (class_id, user_id) VALUES (%s, %s)", (class_id, users[0]))
-    cursor.execute("SELECT class_name FROM classes WHERE class_id=%s", (class_id,))
-    class_name = cursor.fetchone()[0]
-    database.commit()
-    return jsonify({"code": 200, "message": f"Successfully joined class '{class_name}'"}), 200
+    cursor.execute("SELECT user_id FROM class_users WHERE class_id=%s AND user_id=%s;",(class_id,users[0]))
+    user_id = cursor.fetchone()
+    if user_id is None:
+        cursor.execute("INSERT INTO class_users (class_id, user_id) VALUES (%s, %s)", (class_id, users[0]))
+        cursor.execute("SELECT class_name FROM classes WHERE class_id=%s", (class_id,))
+        class_name = cursor.fetchone()[0]
+        database.commit()
+        return jsonify({"code": 200, "message": f"Successfully joined class '{class_name}'"}), 200
+    return jsonify({"code": 403, "message": f"You had joined class '{class_id}'"}), 403
 
 
 @app.route('/api/users/task/new', methods=['POST'])
@@ -153,12 +157,14 @@ def get_tasks_words(users):
     if task_id is not None:
         cursor.execute(
             "SELECT t.task_id, t.word_id, w.word, w.trans, w.sentences, w.json_all, w.us_phone, w.uk_phone FROM "
-            "task_words t JOIN words w ON t.word_id = w.word_id WHERE task_id = %s",
+            "task_words t JOIN words w ON t.word_id = w.word_id WHERE t.task_id = %s",
             (task_id,))
         all_res = cursor.fetchall()
         ls = []
         for i in all_res:
-            ls.append(i)
+            dic = {"task_id": i[0], "word_id": i[1], "word_name": i[2], "trans": i[3], "sentence": i[4],
+                   "word_data": i[5], "us_phone": i[6], "uk_phone": i[7]}
+            ls.append(dic)
         return jsonify({"data": ls, "code": 200}), 200
     else:
         cursor.execute(
@@ -177,11 +183,12 @@ def get_tasks_words(users):
 @token_required_users
 def class_users(users):
     args = set(request.args.items())
-    cursor.execute("SELECT class_id, user_id, role FROM class_users WHERE user_id = %s", (users[0],))
+    cursor.execute("SELECT c.class_id, c.user_id, c.role, cls.class_name FROM class_users c JOIN classes cls ON "
+                   "cls.class_id = c.class_id WHERE c.user_id = %s", (users[0],))
     res = cursor.fetchall()
     ls = []
     for i in res:
-        dic = {"class_id": i[0], "user_id": i[1], "role": i[2]}
+        dic = {"class_id": i[0], "user_id": i[1], "role": i[2], "class_name": i[3]}
         set_dic = set(dic.items())
         if args is not None:
             if args.issubset(set_dic):
@@ -218,7 +225,7 @@ def task_submit_condition(users):
             cursor.execute("SELECT spell_correct_count FROM user_review_records WHERE user_id = %s AND word_id = %s",
                            (user_id, word_id))
             if cursor.fetchone() is None:
-                cursor.execute("INSERT INTO user_review_records (user_id, word_id) VALUES (%s, %s)", (user_id, word_id))
+                cursor.execute("INSERT INTO user_review_records (user_id, word_id, review_result, spell_correct_count) VALUES (%s, %s, %s,%s) RETURNING spell_correct_count", (user_id, word_id, situation,0))
             cursor.execute("SELECT spell_correct_count FROM user_review_records WHERE user_id = %s AND word_id = %s",
                            (user_id, word_id))
             count = int(cursor.fetchone()[0])
@@ -226,7 +233,13 @@ def task_submit_condition(users):
             cursor.execute(
                 "UPDATE user_review_records SET spell_correct_count = %s WHERE user_id = %s AND word_id = %s",
                 (count, user_id, word_id))
+            database.commit()
+            return jsonify({"code": 200, "message": "Bad situation, must be 'false' or 'true'! "}), 200
         elif situation == "false":
+            cursor.execute("SELECT spell_wrong_count FROM user_review_records WHERE user_id = %s AND word_id = %s",
+                           (user_id, word_id))
+            if cursor.fetchone() is None:
+                cursor.execute("INSERT INTO user_review_records (user_id, word_id, review_result, spell_wrong_count) VALUES (%s, %s, %s,%s) RETURNING spell_wrong_count", (user_id, word_id, situation,0))
             cursor.execute("SELECT spell_wrong_count FROM user_review_records WHERE user_id = %s AND word_id = %s",
                            (user_id, word_id))
             count = int(cursor.fetchone()[0])
@@ -234,8 +247,12 @@ def task_submit_condition(users):
             cursor.execute(
                 "UPDATE user_review_records SET spell_wrong_count = %s WHERE user_id = %s AND word_id = %s",
                 (count, user_id, word_id))
+            database.commit()
+            return jsonify({"code": 200, "message": "Bad situation, must be 'false' or 'true'! "}), 200
         else:
             return jsonify({"code": 405, "message": "Bad situation, must be 'false' or 'true'! "}), 405
+
+    return jsonify({"code": 406, "message": "Bad situation, must be spell"}),406
 
 
 @app.route('/api/users/words/query', methods=['GET'])
