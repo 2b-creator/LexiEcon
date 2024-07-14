@@ -1,4 +1,4 @@
-from AppConfiguration import *
+from Apis.AppConfiguration import *
 
 
 def auth_monitor(users, class_id):
@@ -30,7 +30,7 @@ def join_class(users):
     post_invite_code = data["invite_code"]
     cursor.execute("SELECT class_id FROM class_invites WHERE invite_code=%s;", (post_invite_code,))
     class_id = cursor.fetchone()[0]
-    cursor.execute("SELECT user_id FROM class_users WHERE class_id=%s AND user_id=%s;",(class_id,users[0]))
+    cursor.execute("SELECT user_id FROM class_users WHERE class_id=%s AND user_id=%s;", (class_id, users[0]))
     user_id = cursor.fetchone()
     if user_id is None:
         cursor.execute("INSERT INTO class_users (class_id, user_id) VALUES (%s, %s)", (class_id, users[0]))
@@ -122,11 +122,15 @@ def query_tasks(users):
     user_id = users[0]
     name = request.args.get("task_name")
     if name is not None:
-        cursor.execute("SELECT t.task_id FROM tasks t JOIN user_tasks ut ON t.task_id = ut.task_id WHERE task_name = %s AND ut.user_id = %s", (name,user_id))
+        cursor.execute(
+            "SELECT t.task_id FROM tasks t JOIN user_tasks ut ON t.task_id = ut.task_id WHERE task_name = %s AND ut.user_id = %s",
+            (name, user_id))
         task_id = cursor.fetchone()[0]
         return jsonify({"task_id": task_id})
     else:
-        cursor.execute("SELECT t.task_id, t.task_name, ut.status FROM tasks t JOIN user_tasks ut ON t.task_id = ut.task_id WHERE ut.user_id = %s;",(user_id,))
+        cursor.execute(
+            "SELECT t.task_id, t.task_name, ut.status FROM tasks t JOIN user_tasks ut ON t.task_id = ut.task_id WHERE ut.user_id = %s;",
+            (user_id,))
         all_id = cursor.fetchall()
         ls = []
         for i in all_id:
@@ -140,7 +144,8 @@ def query_tasks(users):
 def check_tasks(users):
     task_id = request.args.get("task_id")
     user_id = users[0]
-    cursor.execute("SELECT task_id, class_id, status FROM user_tasks WHERE user_id = %s AND task_id = %s", (user_id, task_id))
+    cursor.execute("SELECT task_id, class_id, status FROM user_tasks WHERE user_id = %s AND task_id = %s",
+                   (user_id, task_id))
     all_tasks = cursor.fetchall()
     ls = []
     for i in all_tasks:
@@ -225,7 +230,9 @@ def task_submit_condition(users):
             cursor.execute("SELECT spell_correct_count FROM user_review_records WHERE user_id = %s AND word_id = %s",
                            (user_id, word_id))
             if cursor.fetchone() is None:
-                cursor.execute("INSERT INTO user_review_records (user_id, word_id, review_result, spell_correct_count) VALUES (%s, %s, %s,%s) RETURNING spell_correct_count", (user_id, word_id, situation,0))
+                cursor.execute(
+                    "INSERT INTO user_review_records (user_id, word_id, review_result, spell_correct_count) VALUES (%s, %s, %s,%s) RETURNING spell_correct_count",
+                    (user_id, word_id, situation, 0))
             cursor.execute("SELECT spell_correct_count FROM user_review_records WHERE user_id = %s AND word_id = %s",
                            (user_id, word_id))
             count = int(cursor.fetchone()[0])
@@ -239,7 +246,9 @@ def task_submit_condition(users):
             cursor.execute("SELECT spell_wrong_count FROM user_review_records WHERE user_id = %s AND word_id = %s",
                            (user_id, word_id))
             if cursor.fetchone() is None:
-                cursor.execute("INSERT INTO user_review_records (user_id, word_id, review_result, spell_wrong_count) VALUES (%s, %s, %s,%s) RETURNING spell_wrong_count", (user_id, word_id, situation,0))
+                cursor.execute(
+                    "INSERT INTO user_review_records (user_id, word_id, review_result, spell_wrong_count) VALUES (%s, %s, %s,%s) RETURNING spell_wrong_count",
+                    (user_id, word_id, situation, 0))
             cursor.execute("SELECT spell_wrong_count FROM user_review_records WHERE user_id = %s AND word_id = %s",
                            (user_id, word_id))
             count = int(cursor.fetchone()[0])
@@ -252,7 +261,7 @@ def task_submit_condition(users):
         else:
             return jsonify({"code": 405, "message": "Bad situation, must be 'false' or 'true'! "}), 405
 
-    return jsonify({"code": 406, "message": "Bad situation, must be spell"}),406
+    return jsonify({"code": 406, "message": "Bad situation, must be spell"}), 406
 
 
 @app.route('/api/users/words/query', methods=['GET'])
@@ -274,3 +283,18 @@ def query_words_with_id(users):
             dic = i[0]
             ls.append(dic)
     return jsonify({"data": ls}), 200
+
+
+@app.route('/api/users/change_pwd', methods=['POST'])
+@token_required_users
+def change_pwd(users):
+    user_id = users[0]
+    data = request.json
+    old_pwd = data["old_password"]
+    new_pwd = data["new_password"]
+    cursor.execute("SELECT password FROM users WHERE user_id = %s", (user_id,))
+    old_pwd_auth = cursor.fetchone()[0]
+    if old_pwd == old_pwd_auth:
+        cursor.execute("UPDATE users SET password = %s WHERE user_id = %s;", (new_pwd, user_id))
+        return jsonify({"code": 200, "message": "Successfully changed password."}), 200
+    return jsonify({"code": 405, "message": "Sorry, Authentication failure."}), 405

@@ -1,6 +1,6 @@
-from AdminApi import *
-from UserApi import *
-from ClientApi import *
+from Apis.ClientApi import *
+from Apis.AdminApi import *
+from Apis.UserApi import *
 
 if __name__ == "__main__":
     app.run()

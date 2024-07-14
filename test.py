@@ -5,16 +5,16 @@ import requests
 
 
 def teacher_test():
-    uid = "635d600b-a619-48d3-bfb1-937504dc1858"
+    uid = "9198a89f-38b9-487f-8794-65a994f2ccfe"
 
     headers = {
         "access-token": uid,
         "Content-Type": "application/json"
     }
-    data = {"username": "timo", "password": "an7Q2m7EPGA8P1UyPODuGQ==", "stu_id": 1145141,
+    data = {"username": "timo", "realname": "timo", "password": "an7Q2m7EPGA8P1UyPODuGQ==", "stu_id": 1145141,
             "email": "1114514@test.com"}
 
-    data_2 = {"class_id": 1,"user_id":1,"role":"monitor"}
+    data_2 = {"class_id": 1, "user_id": 1, "role": "monitor"}
     data_json = json.dumps(data)
 
     resp = requests.post(url="http://127.0.0.1:5000/api/admin/force_reg", headers=headers, data=data_json)
@@ -67,7 +67,6 @@ def client_test():
     print(resp.status_code)
     print(resp.json())
 
-
-teacher_test()
+# teacher_test()
 # stu_test()
-#client_test()
+# client_test()

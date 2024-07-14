@@ -1,4 +1,4 @@
-from AppConfiguration import *
+from Apis.AppConfiguration import *
 
 
 # 验证access-token装饰器
@@ -59,14 +59,15 @@ def force_reg(administrator):
     data = request.json
     username = data.get("username")
     password = data.get("password")
+    realname = data.get("realname")
     stu_id = data.get("stu_id")
-    email = data.get("email")
+    # email = data.get("email")
     access_token = str(uuid.uuid4())
-    if username is None or password is None or email is None:
+    if username is None or password is None:
         return jsonify({'code': 403, 'message': 'Need username, password and email'}), 403
 
-    cursor.execute("INSERT INTO users (stu_id, username, password, email, access_token) VALUES (%s, %s, %s, %s, "
-                   "%s) RETURNING user_id", (stu_id, username, password, email, access_token))
+    cursor.execute("INSERT INTO users (stu_id, username, password, realname, access_token) VALUES (%s, %s, "
+                   "%s, %s, %s) RETURNING user_id", (stu_id, username, password, realname, access_token))
     user_id = cursor.fetchone()[0]
     database.commit()
     return jsonify(
@@ -98,3 +99,14 @@ def change_role(administrator):
     database.commit()
     return jsonify(
         {"code": 200, "message": f"Successfully changed the role of {username} from {previous_role} to {role}"}), 200
+
+
+@app.route('/api/admin/force_add', methods=['POST'])
+@token_required
+def force_add_class(administrator):
+    data = request.json
+    user_id = data["user_id"]
+    class_id = data["class_id"]
+    cursor.execute("INSERT INTO class_users (class_id, user_id) VALUES (%s, %s)", (class_id, user_id))
+    database.commit()
+    return jsonify({"code": 200, "message": f"Successfully added students into class {class_id}!"})

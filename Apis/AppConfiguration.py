@@ -4,7 +4,10 @@ import toml
 import uuid
 from functools import wraps
 
-file = toml.load("./config.toml")
+try:
+    file = toml.load("Apis/config.toml")
+except FileNotFoundError:
+    file = toml.load("./config.toml")
 config = file.get("database")
 host = config.get("host")
 db = config.get("name")

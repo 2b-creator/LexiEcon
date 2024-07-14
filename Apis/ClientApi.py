@@ -1,7 +1,7 @@
 import requests
-import RSAEncryptPasswords
+from flask import send_from_directory
 
-from AppConfiguration import *
+from Apis.AppConfiguration import *
 
 
 @app.route('/api/client/login/user', methods=['POST'])
@@ -41,3 +41,22 @@ def check_cate():
         dic = {"cate_id": int(i[0]), "cate_name": i[1]}
         ls.append(dic)
     return jsonify({"data": ls, "code": 200}), 200
+
+
+@app.route('/api/client/latest', methods=['GET'])
+def check_version():
+    latest_version = "1.0.0.1"
+    return jsonify({"data": latest_version, "code": 200}), 200
+
+
+@app.route('/download/<filename>')
+def download(filename):
+    return send_from_directory('../', filename, as_attachment=True)
+
+
+@app.route('/api/client/query', methods=['GET'])
+def get_info():
+    access_token = request.args.get("access_token")
+    cursor.execute("SELECT realname FROM users WHERE access_token=%s", (access_token,))
+    realname = cursor.fetchone()[0]
+    return jsonify({"code:": 200, "realname": realname}), 200

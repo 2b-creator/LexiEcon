@@ -1,10 +1,7 @@
 import json
-from AppConfiguration import *
-import psycopg2
+from Apis.AppConfiguration import *
 import hashlib
-import RSAEncryptPasswords
 import uuid
-import os
 
 cur = database.cursor()
 
@@ -27,7 +24,8 @@ def set_up_table():
         stu_id INT NOT NULL UNIQUE,
         username VARCHAR(50) NOT NULL UNIQUE,
         password VARCHAR(200) NOT NULL,
-        email VARCHAR(100) NOT NULL UNIQUE,
+        realname VARCHAR(200) NOT NULL,
+        email VARCHAR(100),
         access_token VARCHAR(200) NOT NULL UNIQUE,
         registration_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
@@ -182,7 +180,7 @@ def words_to_sql(filename: str):
 
 if __name__ == "__main__":
     set_up_table()
-    words_to_sql("CET4luan_1")
+    words_to_sql("../CET6")
     database.commit()
     cur.close()
     database.close()

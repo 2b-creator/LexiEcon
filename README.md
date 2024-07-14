@@ -49,3 +49,8 @@ and
 python ./main.py
 ```
 
+## Clone words repository
+```shell
+git clone https://github.com/kajweb/dict.git
+```
+
