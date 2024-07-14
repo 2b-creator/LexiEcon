@@ -69,5 +69,5 @@ def client_test():
 
 
 teacher_test()
-# # stu_test()
+# stu_test()
 #client_test()
