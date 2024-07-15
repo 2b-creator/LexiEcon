@@ -1,5 +1,5 @@
 # LexiEcon api
-
+[简体中文](./Docs/zh-cn.md)
 ## Introduction
 This is a LexiEcon api document.
 
