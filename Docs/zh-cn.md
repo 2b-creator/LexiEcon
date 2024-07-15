@@ -156,8 +156,54 @@ print(access_token)
 | 2023243109 | 梁萍   | 女   | 汉族 | 共青团员 | 江苏省 | 经济学院     | 经济统计学   | 23经统1 | 2023 | 2023     | 4    |
 | 2023243110 | 陆振阳 | 男   | 汉族 | 群众     | 江苏省 | 经济学院     | 经济统计学   | 23经统1 | 2023 | 2023     | 4    |
 
-将其重命名为 ids.xlsx 放入服务端的 Apis 文件夹中然后运行 `python ./ImportStudents.py` 即可，然后按照提示输入 `access-token` 最后输出 `out.xlsx` 文件包含学生的初始密码。
+将其重命名为 ids.xlsx 放入服务端的 Apis 文件夹中然后运行 `python ./ImportStudents.py` 即可，然后按照提示输入 `access-token` 最后输出 `out.xlsx` 文件包含学生的初始密码与 user_id 以及各个班级对应的 class_id
+
+下面是输出的样例:
+
+- 表一
+
+| user_id | 学号       | 姓名   | 班级 | 初始密码 |
+| ------- | ---------- | ------ | ---- | -------- |
+| 1       | 2022326128 | 陈思嘉 | 4    | CAc1kI7J |
+| 2       | 2023241101 | 陈曦   | 4    | SQQvAz4b |
+| 3       | 2023241102 | 戴安妮 | 4    | peRILFTR |
+| 4       | 2023241103 | 顾瑞   | 4    | u4biqObt |
+| 5       | 2023241104 | 郭清婷 | 4    | lS7Oc0OG |
+| 6       | 2023241105 | 黄湘怡 | 4    | G0J2e80b |
+| 7       | 2023241106 | 吉玉馨 | 4    | GlzjdR7U |
+
+- 表二
+
+| 23经统1 | 23经统2 | 23金融2 | 23国贸1 | 23金融1 | 23国贸2 | 23电商 |
+| ------- | ------- | ------- | ------- | ------- | ------- | ------ |
+| 1       | 2       | 3       | 4       | 5       | 6       | 7      |
 
 ## 设置班长
 
-班级里的班长可以负责任务的发布，使用 `/api/admin/change_role` 更改学生角色，默认为 `member`
+班级里的班长可以负责任务的发布，使用 `/api/admin/change_role` 端点更改学生角色，默认为 `member` 下面我将举例来设置班长，例如将 `23国贸1` 的陈思嘉设置为他们班的班长
+
+> SetMonitor.py
+
+```python
+import json
+
+import requests
+
+uid = input("access-token:")
+class_id = input("class_id:")
+user_id = input("user_id:")
+headers = {
+    "access-token": uid,
+    "Content-Type": "application/json"
+}
+data = {"class_id": class_id, "user_id": user_id}
+data_json = json.dumps(data)
+resp = requests.post(url="http://127.0.0.1:5000/api/admin/change_role", headers=headers, data=data_json)
+print(resp.json())
+```
+
+在运行这段代码的时候，根据提示输入 `user_id` 与 `class_id` 即可。
+
+## 数据库维护
+
+可以使用pgadmin v4
