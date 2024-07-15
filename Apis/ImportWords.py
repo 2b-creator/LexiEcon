@@ -25,5 +25,6 @@ def words_to_sql(filename: str):
                 f"%s, %s, %s, %s, %s)",
                 (word, uk_phone, us_phone, trans, cate_id, str(sentences), json.dumps(read_lines_json)))
 
+
 if __name__ == "__main__":
     words_to_sql("../CET6.json")

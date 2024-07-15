@@ -1,5 +1,9 @@
 # LexiEcon 使用手册
 
+## 简单流程
+
+欢迎使用 LexiEcon，下面是使用这个项目的一系列流程。
+
 ## 部署后端
 
 ### 拉取源码安装依赖
@@ -104,3 +108,56 @@ python ./MakeDatabase.py
 python ./main.py
 ```
 
+该服务默认的端口是 5000，可根据实际情况进行更改。
+
+## 获取教师 access-token
+
+使用 `POST` 方法请求 `/api/client/login/admin` 端点获取 access-token。
+
+```python
+import hashlib
+import json
+
+import requests
+from Apis.AppConfiguration import *
+
+headers = {
+    "Content-Type": "application/json"
+}
+
+root_account = file.get("admin")  # file = toml.load("./config.toml")
+
+# 加密验证密码
+password = root_account["password"]
+pwd_en = hashlib.md5()
+pwd_en.update(password.encode())
+pwd_en_hex = pwd_en.hexdigest()
+
+data = {"username": root_account["username"], "password": root_account["password"]}
+data_json = json.dumps(data)
+resp = requests.post(url="http://127.0.0.1:5000/api/client/login/admin", headers=headers, data=data_json)
+access_token = resp.json()["access_token"]
+print(access_token)
+```
+
+## 导入学生
+
+你需要准备一个电子表必须包含学号，班级，姓名列，数据结构类似于这样
+
+| 学号       | 姓名   | 性别 | 民族 | 政治面貌 | 生源地 | 所在院系名称 | 校内专业名称 | 班级    | 年级 | 入学年份 | 学制 |
+| ---------- | ------ | ---- | ---- | -------- | ------ | ------------ | :----------- | ------- | ---- | -------- | ---- |
+| 2023243101 | 陈薪宇 | 男   | 汉族 | 群众     | 江苏省 | 经济学院     | 经济统计学   | 23经统1 | 2023 | 2023     | 4    |
+| 2023243102 | 陈宇衡 | 女   | 汉族 | 共青团员 | 江苏省 | 经济学院     | 经济统计学   | 23经统1 | 2023 | 2023     | 4    |
+| 2023243103 | 储承栖 | 女   | 汉族 | 群众     | 江苏省 | 经济学院     | 经济统计学   | 23经统1 | 2023 | 2023     | 4    |
+| 2023243104 | 付雪晴 | 女   | 汉族 | 共青团员 | 江苏省 | 经济学院     | 经济统计学   | 23经统1 | 2023 | 2023     | 4    |
+| 2023243105 | 葛翔   | 男   | 汉族 | 群众     | 江苏省 | 经济学院     | 经济统计学   | 23经统1 | 2023 | 2023     | 4    |
+| 2023243106 | 葛雨璇 | 女   | 汉族 | 群众     | 江苏省 | 经济学院     | 经济统计学   | 23经统1 | 2023 | 2023     | 4    |
+| 2023243107 | 管海洋 | 男   | 汉族 | 群众     | 江苏省 | 经济学院     | 经济统计学   | 23经统1 | 2023 | 2023     | 4    |
+| 2023243109 | 梁萍   | 女   | 汉族 | 共青团员 | 江苏省 | 经济学院     | 经济统计学   | 23经统1 | 2023 | 2023     | 4    |
+| 2023243110 | 陆振阳 | 男   | 汉族 | 群众     | 江苏省 | 经济学院     | 经济统计学   | 23经统1 | 2023 | 2023     | 4    |
+
+将其重命名为 ids.xlsx 放入服务端的 Apis 文件夹中然后运行 `python ./ImportStudents.py` 即可，然后按照提示输入 `access-token` 最后输出 `out.xlsx` 文件包含学生的初始密码。
+
+## 设置班长
+
+班级里的班长可以负责任务的发布，使用 `/api/admin/change_role` 更改学生角色，默认为 `member`
